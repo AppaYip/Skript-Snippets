@@ -88,7 +88,7 @@ effect:
 			complete {_timeout} with {_null}
 		set ({_timeout} -> taskID) to {_id}
 
-# Get reuslt of a timeout's section. Can be null
+# Get result of a timeout's section. Can be null
 object property result:
 	get:
 		if expr-1 isn't a timeout:
