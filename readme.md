@@ -10,4 +10,4 @@ If I get something wrong or you have a suggestion please open an issue/pr.
 
 ## Snippets
 
-* [Timeouts](timeouts/docs.md) -- A tool for getting input with automatic expiration.
+* [Timeouts](timeouts/readme.md) -- A tool for getting input with automatic expiration.
