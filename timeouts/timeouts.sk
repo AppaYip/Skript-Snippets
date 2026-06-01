@@ -1,6 +1,7 @@
 # This probably shouldn't be used out of this sk file but there doesn't seem to be a way to make it local
 struct timeout:
 	data: objects = {_null} # The data to be passed to the section.
+	owner: object = {_null} # Optional object associated with this timeout. Commonly a player, but can be any object.
 	section: section = {_null} # The section to run when the timeout is completed, whether by expiring or by effect.
 	result: objects = {_null} # The returned value of the section.
 	isCompleted: boolean = false # Whether or not the timeout is completed.
@@ -12,10 +13,14 @@ struct timeout:
 expression:
 	patterns:
 		[a] [new] %-timespan% timeout
+		[a] [new] %-timespan% timeout [and] [with] [the] [owner] %object%
+		
 		[a] [new] timeout (of|for) %-timespan%
+		[a] [new] timeout (of|for) %-timespan% [and] [with] [the] [owner] %object%
 	get:
 		set {_timeout} to timeout struct instance:
 			duration: expression-1
+			owner: expression-2 ? {_null}
 		return {_timeout}
 
 
@@ -25,7 +30,7 @@ effect:
 		complete [the] [timeout] %object% with [value] %objects%
 		resolve [the] [timeout] %object% with [value] %objects%
 	trigger:
-		if (template of expr-1 ? {_null}) != "timeout":
+		if expr-1 isn't a timeout:
 			logError("Custom expression <gold>'complete timeout'</gold> was called with <gold>'%expr-1%'</gold> which isn't a valid timeout!")
 			stop
 
@@ -47,26 +52,29 @@ effect:
 		set {_input} to {_args::1}
 		remove {_input} from {_args::*}
 		
-		run section ({_timeout} -> section) with arguments ({_input}, {_args::*}) and store result in {_result} and wait
+		run section ({_timeout} -> section) with arguments ({_timeout}, {_input}, {_args::*}) and store result in {_result} and wait
 		set {_timeout} -> result to {_result}
 
 
-# Is the timeout completed
-condition:
-	patterns:
-		[the] [timeout] %object% [is|has been] complete[d]
+# Is the timeout completed?
+object property condition complete[d]:
 	check:
-		if (template of expr-1 ? {_null}) != "timeout":
+		if expr-1 isn't a timeout:
 			logError("Custom condition <gold>'complete is completed'</gold> was called with <gold>'%expr-1%'</gold> which isn't a valid timeout!")
 			stop
 		return (expression-1 -> isCompleted)
+		
+# Is this a timeout?
+object property condition [a] timeout:
+	check:
+		return whether (template of expr-1 ? {_null}) = "timeout"
 
 # Await effect
 effect:
 	patterns:
 		(wait for|await) %object% [and] [then] [run] %section%
 	trigger:
-		if (template of expr-1 ? {_null}) != "timeout":
+		if expr-1 isn't a timeout:
 			logError("Custom expression <gold>'wait for timeout'</gold> was called with <gold>'%expr-1%'</gold> and <gold>'%expr-2%'</gold> which isn't a valid timeout!")
 			stop
 
@@ -80,13 +88,27 @@ effect:
 			complete {_timeout} with {_null}
 		set ({_timeout} -> taskID) to {_id}
 
-# Get reuslt of section. Can be null
+# Get reuslt of a timeout's section. Can be null
 object property result:
 	get:
-		if (template of expr-1 ? {_null}) != "timeout":
-			logError("Custom expression <gold>'wait for timeout'</gold> was called with <gold>'%expr-1%'</gold> and <gold>'%expr-2%'</gold> which isn't a valid timeout!")
+		if expr-1 isn't a timeout:
+			logError("Custom expression <gold>'result'</gold> was called with <gold>'%expr-1%'</gold> which isn't a valid timeout!")
 			return {_null}
 		return expr-1 -> result
+		
+# Get or set the owner of a timeout. Can be null when getting.
+object property timeout owner:
+	get:
+		if expr-1 isn't a timeout:
+			logError("Custom expression <gold>'timeout owner'</gold> was called with <gold>'%expr-1%'</gold> which isn't a valid timeout!")
+			return {_null}
+		return expr-1 -> owner
+	set:
+		if expr-1 isn't a timeout:
+			logError("Custom expression <gold>'timeout owner'</gold> was called with <gold>'%expr-1%'</gold> which isn't a valid timeout!")
+			stop
+		set (expr-1 -> owner) to change value
+
 
 
 local function logError(error: string):
