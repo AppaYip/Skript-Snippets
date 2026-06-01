@@ -45,10 +45,10 @@ Where:
 ### Creating a Timeout
 
 `[a] [new] %timespan% timeout`\
-`[a] [new] %-timespan% timeout [and] [with] [the] [owner] %object%`\
+`[a] [new] %timespan% timeout [and] [with] [the] [owner] %object%`\
 \
 `[a] [new] timeout (of|for) %timespan%`\
-`[a] [new] timeout (of|for) %-timespan% [and] [with] [the] [owner] %object%`
+`[a] [new] timeout (of|for) %timespan% [and] [with] [the] [owner] %object%`
 
 Creates a new timeout with the specified expiration duration.
 
