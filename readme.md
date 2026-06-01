@@ -6,7 +6,7 @@ These snippets/scripts are all open source, you are free to use them however you
 
 Each Snippet will be in its own folder. Each snippet will also contain a docs.md file (assuming I don't forgot) explaining how to use it as well as examples.
 
-If I get something wrong or you have a suggestion please open a issue/pr.
+If I get something wrong or you have a suggestion please open an issue/pr.
 
 ## Snippets
 
