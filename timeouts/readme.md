@@ -327,7 +327,7 @@ Output: `Timeout owner: Owner Test`
 
 ```v
 create new section with {_timeout}, {_result} stored in {_section}:
-    delete {input::%uuid of {_timeout}'s owner%}
+    delete {-input::%uuid of {_timeout}'s owner%}
     if {_result} isn't set:
         broadcast "You didn't type something within 25 seconds."
         stop
