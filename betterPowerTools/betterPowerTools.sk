@@ -112,12 +112,12 @@ function handlePT(player: player, item: item, eventType: string, eventData: stru
 	set {_function} to function named {-powertools::%{_id}%::function}
 	if {_function} is set:
 		set {_result} to result of {_function} with args {_data}
-		return {_result} ? true
+		return {_result} ? false
 
 	set {_section} to {-powertools::%{_id}%::section}
 	if {_section} is set:
 		run section {_section} with arguments {_data} and store result in {_result}
-		return {_result} ? true
+		return {_result} ? false
 
 	return false
 
