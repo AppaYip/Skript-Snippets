@@ -1,0 +1,150 @@
+using reflection
+
+on script load:
+    set {-options::pdcKeys::BTP} to "betterPTS"
+
+#
+# Command
+#
+command /betterpowertool <action: string> [<id: string>]:
+	aliases: /bpt
+	permission: op
+	executable by: player
+	trigger:
+		if {_action} = "set":
+			if any:
+				player's tool isn't set
+				player's tool is air
+			then:
+				send "<red>Hold an item to use this command!" to player
+				stop
+			set player's tool to bindPT(player's tool, {_id})
+			stop
+
+		if {_action} = "clear":
+			clearPT(player's tool)
+			stop
+
+		if {_action} = "toggle":
+			togglePTS(player,{_id})
+			stop
+	
+		send colored "<red>Usage: /bpt <bind|clear|toggle>" to player 
+
+on tab complete of "/betterpowertool" or "bpt":
+	set tab completions for position 1 to ("set", "clear", "toggle")
+	if tab arg-1 = "toggle":
+		set tab completions for position 2 to ("on", "off")
+
+
+function getPTID(item: item):: string:
+	return data tag {-options::pdcKeys::BTP} of {_item}
+
+function bindPT(item: item, id: string):: item:
+	set string data tag {-options::pdcKeys::BTP} of {_item} to {_id}
+	return {_item}
+
+function clearPT(item: item):
+	clear string data tag {-options::pdcKeys::BTP} of {_item}
+
+#
+# Player Utilities
+#
+function togglePTS(player: player, state: string = {_null}): # True = can use pts, false = no
+	if {_state} isn't set:
+		set {_bool} to {-options::%uuid of {_player}%::ptToggle} ? true
+		set {_bool} to opposite of {_bool}
+	else:
+		if {_state} = "on":
+			set {_bool} to true
+		else:
+			set {_bool} to false
+
+	set {-options::%uuid of {_player}%::ptToggle} to {_bool}
+
+	if {_bool} = true:
+		set {_msg} to "<green>On"
+	else:
+		set {_msg} to "<red>Off" 
+
+	send colored "<yellow>Toggled powertools: %{_msg}%" to {_player}
+
+function isPTEnabled(player: player):: boolean:
+	return {-options::%uuid of {_player}%::ptToggle} ? true
+
+
+function registerPowerTool(id: string, callback: string):
+    set {-powertools::%{_id}%::function} to {_callback}
+
+function registerPowerTool(id: string, callback: section):
+    set {-powertools::%{_id}%::section} to {_callback}
+
+
+struct powerToolContext:
+	player: player
+	item: item
+	eventType: string # The eventy type. "LEFT", "RIGHT", "OFFHAND", "DROP", "ATTACK", "HURT". Man if only enums.
+	eventData: struct = {_} # This is event data. See structs below for presets or pass in a custom struct.
+
+struct damagePTData: # General struct for damage events.
+	victim: entity
+	attacker: entity
+
+
+# Function for event handling
+function handlePT(player: player, item: item, eventType: string, eventData: struct = {_}) :: boolean:
+	if isPTEnabled({_player}) = false:
+		return false
+
+
+	set {_id} to getPTID({_item})
+	if {_id} isn't set:
+		return false
+
+	set {_data} to powerToolContext struct instance:	
+		player: {_player}
+		item: {_item}
+		eventType: {_eventType}
+		eventData: {_eventData}
+
+
+	# Validate and run functions
+	set {_function} to function named {-powertools::%{_id}%::function}
+	if {_function} is set:
+		set {_result} to result of {_function} with args {_data}
+		return {_result} ? true
+
+	set {_section} to {-powertools::%{_id}%::section}
+	if {_section} is set:
+		run section {_section} with arguments {_data} and store result in {_result}
+		return {_result} ? true
+
+	return false
+
+#
+# Event Routing
+#
+on left click:
+    cancel event if handlePT(player, player's tool, "LEFT") is true
+
+on right click:
+    cancel event if handlePT(player, player's tool, "RIGHT") is true
+
+
+on swap hand items:
+    cancel event if handlePT(player, player's tool, "OFFHAND") is true
+
+on drop:
+    cancel event if handlePT(player, event-item, "DROP") is true
+
+on damage:
+	set {_eventData} to damagePTData struct instance:
+		victim: victim
+		attacker: attacker
+	cancel event if handlePT(attacker, attacker's tool, "ATTACK", {_eventData}) is true
+
+on damage:
+	set {_eventData} to damagePTData struct instance:
+		victim: victim
+		attacker: attacker
+	cancel event if handlePT(victim, victim's tool, "HARMED", {_eventData}) is true
