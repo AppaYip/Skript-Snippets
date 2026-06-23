@@ -11,3 +11,4 @@ If I get something wrong or you have a suggestion please open an issue/pr.
 ## Snippets
 
 * [Timeouts](timeouts/readme.md) -- A tool for getting input with automatic expiration.
+* [Better Power Tools](betterPowerTools/readme.md) -- A tool for tying items to callbacks.
